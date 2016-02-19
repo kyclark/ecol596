@@ -1,0 +1,18 @@
+# set terminal png transparent nocrop enhanced size 450,320 font "arial,8" 
+# set output 'histograms.1.png'
+#set key inside right top vertical Right noreverse noenhanced autotitle nobox
+#set datafile missing '-'
+#set style data linespoints
+#set xtics border in scale 1,0.5 nomirror rotate by -45  autojustify
+#set xtics  norangelimit
+#set xtics   ()
+#x = 0.0
+#i = 22
+
+#set title "Ac2"
+#set style data histograms
+#set style fill solid 1.0 border lt -1
+set term png tiny
+set output "Tw2-high.png"
+x = 1000
+plot "Tw2-high.histo" using 1:2 with lines
