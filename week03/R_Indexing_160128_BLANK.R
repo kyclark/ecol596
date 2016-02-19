@@ -561,42 +561,64 @@ colnames(glop) <- tolower(colnames(glop))
 
 # 10) Make a character vector called 'leaf.traits' containing the column names in 'glop'
 # that contain ll, lma, nmass, and narea data.
-leaf.traits = glop$[colnames(glop) %in% c("ll", "lma", "nmass", "narea")]
+leaf.traits = c("ll", "log.lma", "log.nmass", "log.aarea")
+glop[colnames(glop) %in% leaf.traits]
 
 # 11) Make another character vector called 'taxa' containing "genus" and "species".
+taxa = c("genus", "species")
+glop[colnames(glop) %in% taxa]
 
 # 12) Make a character vector 'gen.grp1' that contains the following genus names:
 # "Rosa", "Inga", "Smilax", "Picea", "Senna", "Lyginia", "Ceriops"
+gen.grp1 = c("Rosa", "Inga", "Smilax", "Picea", "Senna", "Lyginia", "Ceriops")
+
 
 # 13) Make an object 'gen.grp1.index' that contains the row numbers in 'glop' that contain
 # data for the 'gen.grp1' genera.
+gen.grp1.index = glop$genus %in% gen.grp1
+
 
 # 14) Using the indexing objects you just created, make a new data frame called 'glop2'
 # that is equal to the taxonomic and leaf trait columns of 'glop', with only the rows
 # containing data for the genera in 'gen.grp1'. Just do this by making an object 'glop2'
 # equal to the results of indexing in 'glop'.
+glop2 = glop[gen.grp1.index, c(taxa, leaf.traits)]
 
 # 15) View the head() of 'glop2' to make sure it looks right.
+head(glop2)
 
 # 16) Make a new data frame called 'glop3' that is similar to 'glop2', except that it
 # EXCLUDES all the data from our 'gen.grp1'.
+glop3 = glop[!gen.grp1.index, c(taxa, leaf.traits)]
+
 
 # 17) Compare the number of rows in 'glop', 'glop2', and 'glop3' to make sure you got the
 # right number in 'glop3'. In fact, make it a logical test that should return TRUE.
+nrow(glop) == nrow(glop2) + nrow(glop3)
 
 # 18) Just to make extra sure you indexed correctly, do a logical test to see whether the
 # genus names in 'gen.grp1' occur anywhere in the 'genus' column of 'glop3'.
+gen.grp1 %in% unique(glop3$genus)
 
 # 19) Bonus tip for a larger test: try wrapping your above test inside the function any().
+any(gen.grp1 %in% unique(glop3$genus))
+
 
 # What do you think the function all() does?
+# returns T if all are T
+all(gen.grp1 %in% unique(glop3$genus))
+
 
 # 20) Use the aov() function to see if log leaf life span (log.ll) significantly differs
 # across the following group of genera:
 # "Hakea", "Quercus", "Salix", "Eucalyptus", "Protea", "Acer".
 # Solve this problem by whatever means you like. Use R-help and Google to see how to use
 # aov(). **Identify the p-value.**
+gen.wanted = c("Hakea", "Quercus", "Salix", "Eucalyptus", "Protea", "Acer")
+aov.results = aov(log.ll ~ genus, data = glop[glop$genus %in% gen.wanted, ])
+aov.summary =summary(aov.results)
 
+# P = 6.44e-16
 
 #=========================================================================================
 # Part 3: Indexing in matrices
@@ -625,7 +647,7 @@ leaf.traits = glop$[colnames(glop) %in% c("ll", "lma", "nmass", "narea")]
 # many columns it should have, using the function matrix().
 
 #--Make a 2-row matrix 'm' with the elements of our vector 'v' that are greater than 12.
-
+m = matrix(v[v > 12], 2)
 
 # << From a data frame >> ----------------------------------------------------------------
 
@@ -634,7 +656,7 @@ leaf.traits = glop$[colnames(glop) %in% c("ll", "lma", "nmass", "narea")]
 
 #--Use as.matrix() and this trait-column-names indexing object to make a matrix 'tr.mat'
 # out of some of the numerical leaf trait data from 'glop'.
-
+tr.mat = as.matrix(glop[glop$log.ll > 1, leaf.traits])
 
 
 # Take a look at the head() of tr.mat. Notice that the column names are still there, but
@@ -653,12 +675,14 @@ leaf.traits = glop$[colnames(glop) %in% c("ll", "lma", "nmass", "narea")]
 #--Pull in the file "lidar_t1.csv" from your tutorial datasets directory as a matrix
 # 't1.lidar'. (See the description of the LIDAR datasets at the beginning of the tutorial
 # under << DATASETS >> .)
-
+t1.lidar = as.matrix(read.csv("~/work/ecol596w/data/lidar/lidar_t1.csv"))
 
 #--Get some info about this object:
 # Use dim() to get the dimensions (nrows ncols)
+dim(t1.lidar)
 
 # Check the class() to make sure it's a matrix.
+class(t1.lidar)
 
 # We'll look at some of the data below, and describe it further when we use it in Part 5.
 
@@ -672,13 +696,20 @@ leaf.traits = glop$[colnames(glop) %in% c("ll", "lma", "nmass", "narea")]
 # One-dimensional indexing means putting a single vector inside of [ ] (i.e. no comma).
 
 #--Look at the first 50 elements in 't1.lidar'.
+t1.lidar[1:50]
 
+t1.lidar[t1.lidar == -9999]
+t1.lidar[is.na(t1.lidar)]
 
 # NOTE: When you index one-dimensionally, you get a 1D return (i.e. a vector).
+t1.lidar[is.na(t1.lidar)] = -9999
+t1.lidar[t1.lidar == -9999] = NA
 
 # Outputs from instruments often give nonsense numbers that actually indicate an absence
 # of data, in this case, -9999. Having this 2D structured data as a matrix instead of a
 # data frame makes quick edits of all the data simple.
+
+
 
 #--Let's convert all -9999 entries into NAs. Do this by 1D LOGICAL indexing of all entries
 # equal to -9999.
@@ -687,6 +718,7 @@ leaf.traits = glop$[colnames(glop) %in% c("ll", "lma", "nmass", "narea")]
 #--Use the LOGICAL test is.na() with which() to get the positions (integer) of all the NA
 # values in 't1.lidar'. Save the vector of positions to an object 'pos.na'.
 
+pos.na = which(is.na(t1.lidar))
 
 # NOTE: with the above code, we aren't exactly indexing in 't1.lidar', but we are still
 # treating it as a vector. If 't1.lidar' were a data frame, that code wouldn't work.
@@ -694,6 +726,7 @@ leaf.traits = glop$[colnames(glop) %in% c("ll", "lma", "nmass", "narea")]
 #--Now ask how many non-na entries there are in t1.lidar by getting the length() of
 # 't1.lidar' with 'pos.na' negatively indexed.
 
+length(t1.lidar[-pos.na])
 
 #-----------------------------------------------------------------------------------------
 # Two-dimensional indexing in matrices
@@ -704,7 +737,7 @@ leaf.traits = glop$[colnames(glop) %in% c("ll", "lma", "nmass", "narea")]
 # columns, leave the vector blank. This works the same as in data frames.
 
 #--View the first 10 rows and 6 columns of 't1.lidar'.
-
+t1.lidar[1:10,6]
 
 #--If there are column names, you can index columns by name with a character vector. View
 # rows 1:10 of columns "V1" and "V2".
@@ -736,7 +769,9 @@ leaf.traits = glop$[colnames(glop) %in% c("ll", "lma", "nmass", "narea")]
 
 # This is easy, just wrap the matrix inside of data.frame() or as.data.frame(). Make a
 # data frame called 'tmp' out of 't1.lidar'.
-
+tmp = data.frame(t1.lidar)
+head(tmp)
+rm(tmp)
 
 #--Take a look at the head() of the first six columns of 'tmp'.
 
@@ -755,7 +790,8 @@ leaf.traits = glop$[colnames(glop) %in% c("ll", "lma", "nmass", "narea")]
 #--Make a data frame 'tmp' with column "one" equal to 1:3 and column "two" equal to 4:6.
 # View 'tmp'.
 
-
+tmp = data.frame(one=1:3, two=4:6)
+tmp
 
 #--View the colnames() of 'tmp'. Notice they are now quoted character strings, because now
 # they are names of objects inside of another object.
@@ -768,7 +804,7 @@ leaf.traits = glop$[colnames(glop) %in% c("ll", "lma", "nmass", "narea")]
 #--Make a data frame 'dwarves' with the three vectors from our dwarf data. If you insert
 # named vectors, the column names will take on the vector names, unless you specify
 # otherwise. View 'dwarves'
-
+dwarves = data.frame(names, ages, sex)
 
 
 #-----------------------------------------------------------------------------------------
