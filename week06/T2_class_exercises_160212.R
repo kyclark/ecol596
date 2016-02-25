@@ -79,14 +79,16 @@ get_counts <- function (group.col, trait.cols) {
     for (trait in trait.cols) {
       # (7) Make an object 'trait.count' containing the count of non-NA data for the given
       # group and trait in glop.
-      trait.count = length(which(is.na(glop[group.col == group, trait]))
+      trait.count = length(which(!is.na(glop[glop[[group.col]] == group, trait])))
       # (8) Deposit the trait count in the corresponding cell in res.table.
-      res.table[group.col == group, trait] = trait.count
+      res.table[res.table$group.col == group, trait] = trait.count
     }
   }
   #--Return res.table from the function.
   return (res.table)
 }
+
+get_counts("biome", c("log.ll","log.lma", "log.amass", "log.gs"))
 
 # << Tutorial 2 Part 2 >> ----------------------------------------------------------------
 
