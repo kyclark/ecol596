@@ -26,12 +26,14 @@ main = function() {
     
     peaks <- argmax(x=x, y=y, w=w, span=span)
     
-    plot(x, y, cex=0.75, col="Gray", main=fname)
+    png(filename = paste0(fname, '.png'))
+    plot(x, y, cex=0.75, col="Gray", main=fname, xlab="count", ylab="frequency")
     lines(x, peaks$y.hat,  lwd=2) 
     y.min <- min(y)
     sapply(peaks$i, function(i) lines(c(x[i],x[i]), c(y.min, peaks$y.hat[i]),
                                       col="Red", lty=2))
     points(x[peaks$i], peaks$y.hat[peaks$i], col="Red", pch=19, cex=1.25)
+    dev.off()
   }
 }
 
