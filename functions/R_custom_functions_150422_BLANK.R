@@ -351,21 +351,22 @@ jack_slope <- function (trait.x, trait.y, group) {
   jack.slope <- mean (table$slope)
 
   #--Return the jacknife estimator of the slope and the table in a list.
-  # ***
+  return(list(jack.slope, table))
 }
 
 #--Execute the function for 'log.lma', 'log.ll', and 'biome'.
-# ***
+jack_slope("log.lma", "log.ll", "biome")
 
 # (Removal of temperate forests most strongly reduces the slope, and removal of wetlands
 # most strongly increases it.)
 
 #--You can store both outputs in a list:
-# ***
+jack.biome = jack_slope("log.lma", "log.ll", "biome")
 
 # Then access each one in the usual way you index lists:
-# ***
 
+printf("est = %s\n", jack.biome[[1]])
+jack.biome[[2]]
 
 #--Since the execution of the function is equivalent to a list, you can add list indices
 # directly to the end of the function call. Do this to save the table and estimator value
@@ -409,7 +410,9 @@ jack_slope <- function (trait.x, trait.y, group) {
   #--Return a warning if any of the groups have no complete cases. ('test' is a logical
   # vector with TRUE representing biomes that had no complete cases.)
 
-  # ***
+  if (any(test)) {
+    warning("At least one removal group has 0 complete cases of trait data")
+  }
 
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   for (element.i in unique.elements) {
@@ -496,7 +499,8 @@ jack_slope ('log.lma', 'log.ll', 'biome')
 
 #--Make a functions directory object 'fun.dir', pointing to the folder containing the
 # wrap_text function (and end with /).
-# ***
+fun.dir = "~/work/ecol596/fun"
+source(file.path(fun.dir, "wrap_text.R"))
 
 #--The primary argument for source() is 'file', so just point it at the script like you'd
 # call in a dataset, except don't store the output as an object.
@@ -635,6 +639,12 @@ graph_traits (c("ALPINE","DESERT"), "log.aarea", "log.narea", NULL)
 #--paste() together the following vector of biomes, setting the 'collapse' argument to
 # "; ".
 biomes <- c("ALPINE","TEMP_RF","DESERT")
+paste(biomes, collapse=";")
+
+library(R.utils)
+printf("Problems biomes are %s.\n", paste0(biomes, collapse=", "))
+
+
 # ***
 
 #--Let's use if() and paste() with its 'collapse' argument to allow our title to reflect
@@ -646,7 +656,9 @@ graph_traits <- function (biomes="all", trait.1, trait.2, complete.traits=NULL) 
   if (!is.null (complete.traits)) { dat <- dat [complete.cases (dat[complete.traits]), ] }
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   #--Define the graph title text for biomes choices.
-  # ***
+  
+  title.biomes = if ("all" %in% biomes) "All" else paste(biomes, collapse="; ")
+  title = sprintf("%s vs %s for biomes: %s.", trait.1, trait.2, title.biomes)
 
 
   #--Make the graph title as an object.
@@ -726,12 +738,33 @@ wrap_text <- function (text, wrap.length=60) {
     }
 }
 
+my_break = function (string, max_length=50) {
+  words = unlist(strsplit(string, "[[:space:]]"))
+  out = list()
+  buf = c()
+  i = 1
+  for (word in words) {
+    if (sum(nchar(buf), length(buf)) + nchar(word) > max_length) {
+      out[i] = paste0(buf, collapse=" ")
+      i = i + 1
+      buf = c(word)
+    }
+    else {
+      buf = c(buf, word)
+    }
+  }
+  
+  return(paste0(c(out, paste0(buf, collapse=" ")), collapse="\n"))
+}
+
+
 # The break_text() function nested in wrap_text() returns a vector of two text fragments.
 # Those are only returned to the local environment of wrap_text().
 
 #--Try out wrap_text() on a long sentence, with 'wrap.length' set to 30 characters.
-my.text <- "This is a really long sentence for a graph title with a lot of pasted things."
-# ***
+my.text <- "This is a really long sentence\tfor a graph title with a lot of pasted things."
+wrap_text(my.text, 20)
+my_break(my.text, max_length=20)
 
 # Note that a single text string is returned (the '/n's act as carriage returns when the
 # text is used in a plot title). None of the fragment pairs from the nested function
