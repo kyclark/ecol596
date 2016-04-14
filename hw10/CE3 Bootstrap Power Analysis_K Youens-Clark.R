@@ -169,18 +169,18 @@ sig_t <- function (data, data.col, group.col, group.1, group.2) {
 
 # Now, the bootstrap power analysis.
 
-# Stay tuned for an updated version while I decide how much to have you figure out on your
-# own.
-
 #-----------------------------------------------------------------------------------------
 # Function: boot_power
 #-----------------------------------------------------------------------------------------
-peek = function (df, n=1) { t(head(df, n=n))}
-
 boot_power = function (df, data.col, group.col, group1, group2, n.boot=1000, n1, n2, alpha=0.05) {
+  # take a subset, be sure there are no NAs in the group/data columns
   subset = df[!is.na(df[[group.col]]) & !is.na(df[[data.col]]), c(group.col, data.col)]
+  
+  # store vectors of the values for groups 1 & 2 for use in mean/sum
   v1 = subset[subset[[group.col]] == group1, data.col]
   v2 = subset[subset[[group.col]] == group2, data.col]
+  
+  # calculate pooled variance 
   m1 = mean(v1)
   m2 = mean(v2)
   deg.free = n1 + n2 - 2
@@ -188,20 +188,28 @@ boot_power = function (df, data.col, group.col, group1, group2, n.boot=1000, n1,
   ss2 = sum((v2 - m2) ^ 2)
   pooled.var = (ss1 + ss2) / deg.free
   
+  # create a vector to store pvalues
   pvalues = numeric(n.boot)
+  
+  # randomly generate samples for the two groups and run t-test, store pvalues
   for (i in 1:n.boot) {
+    # here I wasn't sure how many to ask from "rnorm," 
+    # so I guessed to take the same as the sample sizes
     rand1 = rnorm(n1, mean=m1, sd=sqrt(pooled.var))
     rand2 = rnorm(n2, mean=m2, sd=sqrt(pooled.var))
     dat = data.frame(data=c(rand1, rand2), group=c(rep(group1, n1), rep(group2, n2)))
     pvalues[i] = sig_t(dat, "data", "group", group1, group2)
   }
-  power = length(pvalues) - length(which(pvalues < alpha))
+  
+  # the power is proportion of p-values which are less than "alpha"
+  power = (length(pvalues) - length(which(pvalues < alpha)))/length(pvalues) * 100
   return(power)
 }
 
+# run the boot_power for different alpha values
 for (alpha in c(0.01, 0.05, 0.1, 0.2)) {
   power = boot_power(df=sla, data.col="l", group.col="soil", group1="S", 
                      group2="C", n.boot=1000, n1=10, n2=10, alpha=alpha)
   
-  printf("alpha = %s, power = %s\n", alpha, power)  
+  printf("alpha = %.02f, power = %.02f\n", alpha, power)  
 }
