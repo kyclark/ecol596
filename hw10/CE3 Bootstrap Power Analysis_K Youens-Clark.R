@@ -172,13 +172,17 @@ sig_t <- function (data, data.col, group.col, group.1, group.2) {
 #-----------------------------------------------------------------------------------------
 # Function: boot_power
 #-----------------------------------------------------------------------------------------
-boot_power = function (df, data.col, group.col, group1, group2, n.boot=1000, n1, n2, alpha=0.05) {
+boot_power = function (df, data.col, group.col, group1, group2, n.boot=1000, n1=NULL, n2=NULL, alpha=0.05) {
   # take a subset, be sure there are no NAs in the group/data columns
   subset = df[!is.na(df[[group.col]]) & !is.na(df[[data.col]]), c(group.col, data.col)]
   
   # store vectors of the values for groups 1 & 2 for use in mean/sum
   v1 = subset[subset[[group.col]] == group1, data.col]
   v2 = subset[subset[[group.col]] == group2, data.col]
+  
+  #--Determine n1 and n2 based on arguments.
+  if (is.null(n1)) { n1 = length (v1) }
+  if (is.null(n2)) { n2 = length (v2) }
   
   # calculate pooled variance 
   m1 = mean(v1)
@@ -202,14 +206,19 @@ boot_power = function (df, data.col, group.col, group1, group2, n.boot=1000, n1,
   }
   
   # the power is proportion of p-values which are less than "alpha"
-  power = (length(pvalues) - length(which(pvalues < alpha)))/length(pvalues) * 100
+  power = length(which(pvalues < alpha))/length(pvalues)
   return(power)
 }
 
 # run the boot_power for different alpha values
-for (alpha in c(0.01, 0.05, 0.1, 0.2)) {
-  power = boot_power(df=sla, data.col="l", group.col="soil", group1="S", 
-                     group2="C", n.boot=1000, n1=10, n2=10, alpha=alpha)
-  
-  printf("alpha = %.02f, power = %.02f\n", alpha, power)  
+for (col in c("l", "lv", "whole")) {
+  printf("col = %s\n", col)
+  for (size in c(100, 200, 400, 800, 1600)) {
+    power = boot_power(
+      df = sla, data.col = col, group.col = "soil", group1 = "S",
+      group2 = "C", n.boot = 1000, alpha = alpha
+    )
+    
+    printf("power = %.02f, size = %s\n", power, size) 
+  }
 }
