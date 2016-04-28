@@ -1,0 +1,4 @@
+#query	/a/b/c/foo	/a/b/c/bar	/a/b/c/baz
+/a/b/c/foo	0	0.4	.8
+/a/b/c/bar	.4	0	.022
+/a/b/c/baz	.8	.022	0
