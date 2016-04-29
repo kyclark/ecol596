@@ -23,7 +23,7 @@ fix_dist = function (file) {
   return(read.table(fixed))
 }
 
-setwd("~/work/martintay/sna")
+setwd("~/work/ecol596/project")
 file = "dist.tab"
 dist = fix_dist(file)
 dist = fix_dist("pov.dist.tab")
@@ -60,16 +60,20 @@ links = melt(data.matrix(dist))
 colnames(links) = c("source", "target", "value")
 links$source = as.character(links$source)
 links$target = as.character(links$target)
+links = links[links$value > 0.7,]
+
 for (i in 1:length(nodes)) {
   node = nodes[i]
   for (f in c("source", "target")) {
     links[ links[[f]] == node, f] = i - 1
   }
 }
+links$source = as.integer(links$source)
+links$target = as.integer(links$target)
 
-sankeyNetwork(Links = links, Nodes = data.frame(name=nodes), Source = 'source',
-              Target = 'target', Value = 'value', NodeID = 'name',
-              fontSize = 12, nodeWidth = 30)
+mynodes = data.frame(name=nodes)
+sankeyNetwork(Links = links, Nodes = mynodes, Source = 'source', Target = 'target', 
+  Value = 'value', NodeID = 'name', fontSize = 12, 3nodeWidth = 30)
 
 # create inverse (nearness) matrix for GBME
 write.table(1 - dist, 'matrix.tab', quote=F, sep="\t")
